@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CogniAves — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #2563EB; --blue-dark: #1E40AF; --blue-light: #EBF3FD;
+      --text: #111827; --muted: #6B7280; --border: #E5E7EB;
+      --bg: #F9FAFB; --surface: #FFFFFF; --error: #DC2626;
+      --success: #16A34A;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { width: 100%; max-width: 420px; }
+    .logo { text-align: center; margin-bottom: 32px; }
+    .logo-icon { width: 56px; height: 56px; background: var(--blue); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+    .logo h1 { font-size: 24px; font-weight: 700; color: var(--text); }
+    .logo p { font-size: 14px; color: var(--muted); margin-top: 4px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; }
+    .tabs { display: flex; background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
+    .tab { flex: 1; padding: 8px; text-align: center; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; border-radius: 8px; transition: all 0.15s; border: none; background: transparent; }
+    .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .form { display: none; flex-direction: column; gap: 16px; }
+    .form.active { display: flex; }
+    .field label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .field input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.15s; background: var(--bg); color: var(--text); }
+    .field input:focus { border-color: var(--blue); background: white; }
+    .btn { width: 100%; padding: 11px; background: var(--blue); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: 'Inter', sans-serif; }
+    .btn:hover { background: var(--blue-dark); }
+    .btn:disabled { background: var(--border); cursor: default; color: var(--muted); }
+    .error-msg { font-size: 13px; color: var(--error); background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 10px 14px; display: none; }
+    .error-msg.show { display: block; }
+    .divider { text-align: center; font-size: 12px; color: var(--muted); }
+    .dark-note { text-align: center; font-size: 12px; color: var(--muted); margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="14" r="7" stroke="white" stroke-width="1.8" fill="none"/>
+          <path d="M13 14h2m4 0h-2m-2 0V12" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M13 21v2a1 1 0 001 1h4a1 1 0 001-1v-2" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1>CogniAves</h1>
+      <p>Your AI coding assistant</p>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('login')">Login</button>
+        <button class="tab" onclick="switchTab('signup')">Sign up</button>
+      </div>
+
+      <div id="error-msg" class="error-msg"></div>
+
+      <!-- Login Form -->
+      <div class="form active" id="login-form">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="••••••••"/>
+        </div>
+        <button class="btn" onclick="login()">Login</button>
+      </div>
+
+      <!-- Signup Form -->
+      <div class="form" id="signup-form">
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="signup-username" placeholder="coolcoder"/>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="signup-email" placeholder="you@example.com"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="signup-password" placeholder="••••••••"/>
+        </div>
+        <button class="btn" onclick="signup()">Create account</button>
+      </div>
+    </div>
+    <p class="dark-note">Dark mode available inside the app ✨</p>
+  </div>
+
+  <script>
+    // Check if already logged in
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d.userId) window.location.href = '/chat';
+    }).catch(() => {});
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i === 0) === (tab === 'login')));
+      document.getElementById('login-form').classList.toggle('active', tab === 'login');
+      document.getElementById('signup-form').classList.toggle('active', tab === 'signup');
+      hideError();
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+
+    function hideError() {
+      document.getElementById('error-msg').classList.remove('show');
+    }
+
+    async function login() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      if (!email || !password) return showError('Please fill in all fields');
+      hideError();
+      const btn = document.querySelector('#login-form .btn');
+      btn.disabled = true; btn.textContent = 'Logging in...';
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) { showError(data.error); btn.disabled = false; btn.textContent = 'Login'; return; }
+        window.location.href = '/chat';
+      } catch { showError('Connection error'); btn.disabled = false; btn.textContent = 'Login'; }
+    }
+
+    async function signup() {
+      const username = document.getElementById('signup-username').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      if (!username || !email || !password) return showError('Please fill in all fields');
+      hideError();
+      const btn = document.querySelector('#signup-form .btn');
+      btn.disabled = true; btn.textContent = 'Creating account...';
+      try {
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) { showError(data.error); btn.disabled = false; btn.textContent = 'Create account'; return; }
+        window.location.href = '/chat';
+      } catch { showError('Connection error'); btn.disabled = false; btn.textContent = 'Create account'; }
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        if (document.getElementById('login-form').classList.contains('active')) login();
+        else signup();
+      }
+    });
+  </script>
+</body>
+</html>
